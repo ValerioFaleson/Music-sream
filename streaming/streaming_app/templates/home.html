@@ -1,0 +1,400 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <!-- Bootstrap Icons en local - Les polices doivent être dans static/fonts/ -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap-icons.css' %}">
+    <!-- Feuille de style personnalisée -->
+    <link rel="stylesheet" href="{% static 'css/styleHome.css' %}">
+    <title>Music Streaming - Accueil</title>
+    
+    
+</head>
+<body>
+    <!-- Container principal avec Bootstrap -->
+    <div class="container-fluid p-0">
+        <!-- Sidebar (barre latérale) -->
+        <div class="sidebar" id="sidebar">
+            <!-- Bouton pour réduire/agrandir la sidebar -->
+            <button class="toggle-btn" id="toggleBtn" title="Réduire/Agrandir">
+                <i class="bi bi-list"></i>
+            </button>
+            
+            <!-- Logo/Titre de l'application -->
+            <div class="logo">
+                <i class="bi bi-music-note-beamed"></i>
+                <span class="logo-text">Music</span>
+            </div>
+            
+            <!-- Navigation principale -->
+            <nav class="nav flex-column">
+                <a href="#" class="nav-link">
+                    <i class="bi bi-house-door me-2"></i>
+                    <span class="nav-text">Accueil</span>
+                </a>
+                <a href="#" class="nav-link">
+                    <i class="bi bi-search me-2"></i>
+                    <span class="nav-text">Rechercher</span>
+                </a>
+                <a href="#" class="nav-link">
+                    <i class="bi bi-collection me-2"></i>
+                    <span class="nav-text">Ma bibliothèque</span>
+                </a>
+            </nav>
+
+            <!-- Section Playlist -->
+            <div class="mt-4">
+                <h6 class="text-uppercase text-muted mb-3 section-title">Playlists</h6>
+                <a href="#" class="nav-link">
+                    <i class="bi bi-plus-square me-2"></i>
+                    <span class="nav-text">Créer une playlist</span>
+                </a>
+                <a href="#" class="nav-link">
+                    <i class="bi bi-heart me-2"></i>
+                    <span class="nav-text">Titres likés</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Zone de contenu principal -->
+        <div class="main-content" id="mainContent">
+            <!-- Header avec gradient -->
+            <div class="content-header">
+                <div class="d-flex justify-content-between align-items-center p-3 bg-dark">
+                    <!-- Barre de recherche avec icône -->
+                    <div class="input-group" style="max-width: 400px;">
+                        <!-- Icône de recherche à gauche -->
+                        <span class="input-group-text bg-secondary border-0">
+                            <i class="bi bi-search text-white"></i>
+                        </span>
+                        <!-- Champ de recherche -->
+                        <input type="text" class="form-control bg-secondary text-white border-0" 
+                               placeholder="Artistes, titres, podcasts...">
+                    </div>
+                    
+                    <!-- Section droite avec boutons -->
+                    <div class="d-flex align-items-center gap-3">
+                        <!-- Bouton Connexion -->
+                        <button class="btn btn-outline-light px-4 py-2" type="button">
+                            Connexion
+                        </button>
+                        
+                        <!-- Bouton Inscription avec style Bootstrap -->
+                        <button class="btn btn-success px-4 py-2" type="button">
+                            Inscription
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section principale avec la playlist -->
+            <div class="row">
+                <div class="col-12">
+                    <h2 class="section-title">
+                        <i class="bi bi-music-note-list me-2"></i>
+                        Playlist disponible
+                    </h2>
+                    
+                    <!-- Grille des pistes audio -->
+                    <div class="music-grid">
+                        <!-- Boucle Django pour afficher chaque piste -->
+                        {% for audio in playlist %}
+                            <div class="music-card" data-audio-src="{% url 'play_audio' audio %}" data-track-name="{{ audio }}">
+                                <!-- Bouton de lecture -->
+                                <div class="play-button">
+                                    <i class="bi bi-play-fill text-white"></i>
+                                </div>
+                                
+                                <!-- Nom de la piste -->
+                                <h3 class="track-name">{{ audio }}</h3>
+                                
+                                <!-- On supprime les contrôles audio individuels -->
+                                <p class="text-muted small">Cliquez sur le bouton play pour écouter</p>
+                            </div>
+                        {% empty %}
+                            <!-- Message affiché quand aucune musique n'est disponible -->
+                            <div class="no-music">
+                                <i class="bi bi-music-note-beamed display-1 text-muted"></i>
+                                <p>Aucun morceau disponible pour le moment.</p>
+                                <p class="small">Revenez plus tard pour découvrir de nouvelles musiques !</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lecteur audio global (comme Spotify) -->
+    <div class="audio-player">
+        <!-- Informations de la piste actuelle -->
+        <div class="current-track">
+            <div class="track-image">
+                <i class="bi bi-music-note-beamed text-white"></i>
+            </div>
+            <div class="track-info">
+                <h4 id="currentTrackName">Aucune piste sélectionnée</h4>
+                <p>Choisissez une musique</p>
+            </div>
+        </div>
+
+        <!-- Contrôles centraux -->
+        <div class="player-controls">
+            <div class="control-buttons">
+                <button class="control-btn" id="shuffleBtn" title="Lecture aléatoire">
+                    <i class="bi bi-shuffle"></i>
+                </button>
+                <button class="control-btn" id="prevBtn" title="Précédent">
+                    <i class="bi bi-skip-start-fill"></i>
+                </button>
+                <button class="control-btn play-pause" id="playPauseBtn" title="Lecture/Pause">
+                    <i class="bi bi-play-fill"></i>
+                </button>
+                <button class="control-btn" id="nextBtn" title="Suivant">
+                    <i class="bi bi-skip-end-fill"></i>
+                </button>
+                <button class="control-btn" id="repeatBtn" title="Répéter">
+                    <i class="bi bi-arrow-repeat"></i>
+                </button>
+            </div>
+            
+            <!-- Barre de progression -->
+            <div class="progress-container">
+                <span class="time-display" id="currentTime">0:00</span>
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <span class="time-display" id="totalTime">0:00</span>
+            </div>
+        </div>
+
+        <!-- Contrôles de volume -->
+        <div class="volume-controls">
+            <button class="control-btn" id="volumeBtn" title="Volume">
+                <i class="bi bi-volume-up"></i>
+            </button>
+            <div class="volume-slider" id="volumeSlider">
+                <div class="volume-fill" id="volumeFill"></div>
+            </div>
+        </div>
+
+        <!-- Élément audio caché pour la lecture -->
+        <audio id="globalAudio" preload="metadata"></audio>
+    </div>
+
+    <!-- Bootstrap JavaScript -->
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+    
+    <!-- Script JavaScript personnalisé -->
+    <script>
+        // Variables globales pour le lecteur audio
+        let currentTrack = null;
+        let playlist = [];
+        let currentIndex = 0;
+        let isPlaying = false;
+        
+        // Fonction pour gérer la sidebar réduite/agrandie
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const toggleBtn = document.getElementById('toggleBtn');
+            
+            // Éléments du lecteur audio
+            const globalAudio = document.getElementById('globalAudio');
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            const currentTrackName = document.getElementById('currentTrackName');
+            const currentTime = document.getElementById('currentTime');
+            const totalTime = document.getElementById('totalTime');
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+            const volumeSlider = document.getElementById('volumeSlider');
+            const volumeFill = document.getElementById('volumeFill');
+            const volumeBtn = document.getElementById('volumeBtn');
+            
+            // Fonction pour basculer la sidebar
+            toggleBtn.addEventListener('click', function() {
+                sidebar.classList.toggle('collapsed');
+                mainContent.classList.toggle('collapsed');
+                
+                // Changer l'icône du bouton
+                const icon = toggleBtn.querySelector('i');
+                if (sidebar.classList.contains('collapsed')) {
+                    icon.className = 'bi bi-arrow-right';
+                    toggleBtn.title = 'Agrandir';
+                } else {
+                    icon.className = 'bi bi-list';
+                    toggleBtn.title = 'Réduire';
+                }
+            });
+            
+            // Créer la playlist à partir des cartes musicales
+            const musicCards = document.querySelectorAll('.music-card');
+            musicCards.forEach((card, index) => {
+                const audioSrc = card.getAttribute('data-audio-src');
+                const trackName = card.getAttribute('data-track-name');
+                if (audioSrc && trackName) {
+                    playlist.push({ src: audioSrc, name: trackName });
+                }
+            });
+            
+            // Gérer les clics sur les boutons de lecture des cartes
+            musicCards.forEach((card, index) => {
+                const playButton = card.querySelector('.play-button');
+                if (playButton) {
+                    playButton.addEventListener('click', function() {
+                        playTrack(index);
+                    });
+                }
+            });
+            
+            // Fonction pour jouer une piste
+            function playTrack(index) {
+                if (playlist.length === 0) return;
+                
+                currentIndex = index;
+                currentTrack = playlist[index];
+                
+                // Mettre à jour l'affichage
+                currentTrackName.textContent = currentTrack.name;
+                globalAudio.src = currentTrack.src;
+                
+                // Jouer la piste
+                globalAudio.play();
+                isPlaying = true;
+                updatePlayPauseButton();
+                
+                // Mettre à jour les boutons des cartes
+                updateCardButtons();
+            }
+            
+            // Fonction pour mettre à jour le bouton play/pause
+            function updatePlayPauseButton() {
+                const icon = playPauseBtn.querySelector('i');
+                if (isPlaying) {
+                    icon.className = 'bi bi-pause-fill';
+                } else {
+                    icon.className = 'bi bi-play-fill';
+                }
+            }
+            
+            // Fonction pour mettre à jour les boutons des cartes
+            function updateCardButtons() {
+                musicCards.forEach((card, index) => {
+                    const playButton = card.querySelector('.play-button i');
+                    if (index === currentIndex && isPlaying) {
+                        playButton.className = 'bi bi-pause-fill text-white';
+                    } else {
+                        playButton.className = 'bi bi-play-fill text-white';
+                    }
+                });
+            }
+            
+            // Gérer le bouton play/pause global
+            playPauseBtn.addEventListener('click', function() {
+                if (currentTrack) {
+                    if (isPlaying) {
+                        globalAudio.pause();
+                        isPlaying = false;
+                    } else {
+                        globalAudio.play();
+                        isPlaying = true;
+                    }
+                    updatePlayPauseButton();
+                    updateCardButtons();
+                }
+            });
+            
+            // Gérer les boutons précédent/suivant
+            document.getElementById('prevBtn').addEventListener('click', function() {
+                if (currentIndex > 0) {
+                    playTrack(currentIndex - 1);
+                }
+            });
+            
+            document.getElementById('nextBtn').addEventListener('click', function() {
+                if (currentIndex < playlist.length - 1) {
+                    playTrack(currentIndex + 1);
+                }
+            });
+            
+            // Mettre à jour la barre de progression
+            globalAudio.addEventListener('timeupdate', function() {
+                const current = globalAudio.currentTime;
+                const duration = globalAudio.duration;
+                
+                if (duration) {
+                    const progress = (current / duration) * 100;
+                    progressFill.style.width = progress + '%';
+                    
+                    // Mettre à jour le temps affiché
+                    currentTime.textContent = formatTime(current);
+                    totalTime.textContent = formatTime(duration);
+                }
+            });
+            
+            // Gérer le clic sur la barre de progression
+            progressBar.addEventListener('click', function(e) {
+                if (globalAudio.duration) {
+                    const rect = progressBar.getBoundingClientRect();
+                    const percent = (e.clientX - rect.left) / rect.width;
+                    globalAudio.currentTime = percent * globalAudio.duration;
+                }
+            });
+            
+            // Gérer le volume
+            volumeSlider.addEventListener('click', function(e) {
+                const rect = volumeSlider.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                globalAudio.volume = percent;
+                volumeFill.style.width = percent * 100 + '%';
+                
+                // Mettre à jour l'icône du volume
+                const volumeIcon = volumeBtn.querySelector('i');
+                if (percent === 0) {
+                    volumeIcon.className = 'bi bi-volume-mute';
+                } else if (percent < 0.5) {
+                    volumeIcon.className = 'bi bi-volume-down';
+                } else {
+                    volumeIcon.className = 'bi bi-volume-up';
+                }
+            });
+            
+            // Gérer le bouton de volume (mute/unmute)
+            volumeBtn.addEventListener('click', function() {
+                const volumeIcon = volumeBtn.querySelector('i');
+                if (globalAudio.volume > 0) {
+                    globalAudio.volume = 0;
+                    volumeFill.style.width = '0%';
+                    volumeIcon.className = 'bi bi-volume-mute';
+                } else {
+                    globalAudio.volume = 0.8;
+                    volumeFill.style.width = '80%';
+                    volumeIcon.className = 'bi bi-volume-up';
+                }
+            });
+            
+            // Fonction pour formater le temps
+            function formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return mins + ':' + (secs < 10 ? '0' : '') + secs;
+            }
+            
+            // Gérer la fin de la piste
+            globalAudio.addEventListener('ended', function() {
+                if (currentIndex < playlist.length - 1) {
+                    playTrack(currentIndex + 1);
+                } else {
+                    isPlaying = false;
+                    updatePlayPauseButton();
+                    updateCardButtons();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -10,9 +10,56 @@
     <link rel="stylesheet" href="{% static 'css/bootstrap-icons.css' %}">
     <!-- Feuille de style personnalisée -->
     <link rel="stylesheet" href="{% static 'css/styleHome.css' %}">
-    <title>Music Streaming - Accueil</title>
+    <title>Playaudio - Accueil</title>
     
-    
+    <style>
+        /* Styles pour les boutons actifs */
+        .control-btn.active {
+            color: #1ed760;
+        }
+        
+        /* Styles pour la liste des musiques */
+        .music-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .music-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .music-item.playing {
+            background: rgba(30, 215, 96, 0.1);
+            border-color: #1ed760;
+        }
+        
+        .play-button {
+            width: 50px;
+            height: 50px;
+            background: #1ed760;
+            border: none;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .play-button:hover {
+            background: #1db954;
+            transform: scale(1.1);
+        }
+        
+        .track-name {
+            color: #fff;
+            font-weight: 500;
+        }
+        
+        .music-item .text-muted {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+    </style>
 </head>
 <body>
     <!-- Container principal avec Bootstrap -->
@@ -27,7 +74,7 @@
             <!-- Logo/Titre de l'application -->
             <div class="logo">
                 <i class="bi bi-music-note-beamed"></i>
-                <span class="logo-text">Music</span>
+                <span class="logo-text">Playaudio</span>
             </div>
             
             <!-- Navigation principale -->
@@ -73,21 +120,27 @@
                         </span>
                         <!-- Champ de recherche -->
                         <input type="text" class="form-control bg-secondary text-white border-0" 
-                               placeholder="Artistes, titres, podcasts...">
+                               placeholder="Rechercher une music ..." id="searchInput">
                     </div>
-                    
-                    <!-- Section droite avec boutons -->
-                    <div class="d-flex align-items-center gap-3">
-                        <!-- Bouton Connexion -->
-                        <button class="btn btn-outline-light px-4 py-2" type="button">
-                            Connexion
-                        </button>
-                        
-                        <!-- Bouton Inscription avec style Bootstrap -->
-                        <button class="btn btn-success px-4 py-2" type="button">
-                            Inscription
-                        </button>
-                    </div>
+
+                    {% if user.is_authenticated %}
+                        <!-- Avatar + bouton déconnexion -->
+                        <div class="d-flex align-items-center gap-3">
+                            <!-- Avatar -->
+                            <div class="user-avatar bg-success text-white fw-bold text-uppercase d-flex justify-content-center align-items-center rounded-circle" style="width: 40px; height: 40px;">
+                                {{ user.username|first }}
+                            </div>
+
+                            <!-- Bouton déconnexion -->
+                            <a class="btn btn-outline-light px-4 py-2" href="{% url 'logout' %}">Déconnexion</a>
+                        </div>
+                    {% else %}
+                        <!-- Connexion et inscription si pas connecté -->
+                        <div class="d-flex align-items-center gap-3">
+                            <a class="btn btn-outline-light px-4 py-2" href="{% url 'login' %}">Connexion</a>
+                            <a class="btn btn-success px-4 py-2" href="{% url 'register' %}">Inscription</a>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
 
@@ -99,28 +152,30 @@
                         Playlist disponible
                     </h2>
                     
-                    <!-- Grille des pistes audio -->
-                    <div class="music-grid">
+                    <!-- Liste des pistes audio ligne par ligne -->
+                    <div class="music-list" id="musicList">
                         <!-- Boucle Django pour afficher chaque piste -->
                         {% for audio in playlist %}
-                            <div class="music-card" data-audio-src="{% url 'play_audio' audio %}" data-track-name="{{ audio }}">
-                                <!-- Bouton de lecture -->
-                                <div class="play-button">
-                                    <i class="bi bi-play-fill text-white"></i>
+                            <div class="row music-item mb-3 p-3 rounded" data-audio-src="{% url 'play_audio' audio %}" data-track-name="{{ audio }}">
+                                <div class="col-auto">
+                                    <!-- Bouton de lecture -->
+                                    <button class="play-button btn rounded-circle d-flex align-items-center justify-content-center">
+                                        <i class="bi bi-play-fill"></i>
+                                    </button>
                                 </div>
-                                
-                                <!-- Nom de la piste -->
-                                <h3 class="track-name">{{ audio }}</h3>
-                                
-                                <!-- On supprime les contrôles audio individuels -->
-                                <p class="text-muted small">Cliquez sur le bouton play pour écouter</p>
+                                <div class="col">
+                                    <!-- Nom de la piste -->
+                                    <h5 class="track-name mb-1">{{ audio }}</h5>
+                                    <!-- Description -->
+                                    <p class="text-muted small mb-0">Cliquez sur le bouton play pour écouter</p>
+                                </div>
                             </div>
                         {% empty %}
                             <!-- Message affiché quand aucune musique n'est disponible -->
-                            <div class="no-music">
+                            <div class="no-music text-center py-5">
                                 <i class="bi bi-music-note-beamed display-1 text-muted"></i>
-                                <p>Aucun morceau disponible pour le moment.</p>
-                                <p class="small">Revenez plus tard pour découvrir de nouvelles musiques !</p>
+                                <p class="mt-3 text-white">Aucun morceau disponible pour le moment.</p>
+                                <p class="small text-muted">Revenez plus tard pour découvrir de nouvelles musiques !</p>
                             </div>
                         {% endfor %}
                     </div>
@@ -191,11 +246,15 @@
     
     <!-- Script JavaScript personnalisé -->
     <script>
+        const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
         // Variables globales pour le lecteur audio
         let currentTrack = null;
         let playlist = [];
+        let originalPlaylist = []; // Pour sauvegarder l'ordre original
         let currentIndex = 0;
         let isPlaying = false;
+        let isShuffled = false;
+        let repeatMode = 'none'; // 'none', 'all', 'one'
         
         // Fonction pour gérer la sidebar réduite/agrandie
         document.addEventListener('DOMContentLoaded', function() {
@@ -214,6 +273,8 @@
             const volumeSlider = document.getElementById('volumeSlider');
             const volumeFill = document.getElementById('volumeFill');
             const volumeBtn = document.getElementById('volumeBtn');
+            const shuffleBtn = document.getElementById('shuffleBtn');
+            const repeatBtn = document.getElementById('repeatBtn');
             
             // Fonction pour basculer la sidebar
             toggleBtn.addEventListener('click', function() {
@@ -231,25 +292,105 @@
                 }
             });
             
-            // Créer la playlist à partir des cartes musicales
-            const musicCards = document.querySelectorAll('.music-card');
-            musicCards.forEach((card, index) => {
-                const audioSrc = card.getAttribute('data-audio-src');
-                const trackName = card.getAttribute('data-track-name');
+            // Créer la playlist à partir des éléments musicaux (maintenant des rows)
+            const musicItems = document.querySelectorAll('.music-item');
+            musicItems.forEach((item, index) => {
+                const audioSrc = item.getAttribute('data-audio-src');
+                const trackName = item.getAttribute('data-track-name');
                 if (audioSrc && trackName) {
                     playlist.push({ src: audioSrc, name: trackName });
                 }
             });
             
-            // Gérer les clics sur les boutons de lecture des cartes
-            musicCards.forEach((card, index) => {
-                const playButton = card.querySelector('.play-button');
+            // Sauvegarder l'ordre original
+            originalPlaylist = [...playlist];
+            
+            // Gérer les clics sur les boutons de lecture des items
+            musicItems.forEach((item, index) => {
+                const playButton = item.querySelector('.play-button');
                 if (playButton) {
-                    playButton.addEventListener('click', function() {
+                    playButton.addEventListener('click', function(e) {
+                        if (!isAuthenticated) {
+                            e.preventDefault();
+                            window.location.href = "{% url 'login' %}";
+                            return;
+                        }
                         playTrack(index);
                     });
                 }
+
+                
+                // Gérer le clic sur toute la ligne
+                item.addEventListener('click', function(e) {
+                    // Ne pas déclencher si on clique sur le bouton
+                    if (!e.target.closest('.play-button')) {
+                            if (!isAuthenticated) {
+                                e.preventDefault();
+                                window.location.href = "{% url 'login' %}";
+                                return;
+                            }
+                            playTrack(index);
+                        }
+
+                });
             });
+            
+            // Fonction pour mélanger la playlist
+            function shufflePlaylist() {
+                if (isShuffled) {
+                    // Restaurer l'ordre original
+                    playlist = [...originalPlaylist];
+                    isShuffled = false;
+                    shuffleBtn.classList.remove('active');
+                    shuffleBtn.title = 'Lecture aléatoire';
+                } else {
+                    // Mélanger la playlist
+                    const currentTrackData = playlist[currentIndex];
+                    playlist = [...playlist].sort(() => Math.random() - 0.5);
+                    // Mettre la piste actuelle en première position
+                    if (currentTrackData) {
+                        const newIndex = playlist.findIndex(track => track.src === currentTrackData.src);
+                        if (newIndex > 0) {
+                            [playlist[0], playlist[newIndex]] = [playlist[newIndex], playlist[0]];
+                        }
+                        currentIndex = 0;
+                    }
+                    isShuffled = true;
+                    shuffleBtn.classList.add('active');
+                    shuffleBtn.title = 'Lecture aléatoire activée';
+                }
+            }
+            
+            // Fonction pour gérer les modes de répétition
+            function toggleRepeatMode() {
+                const repeatIcon = repeatBtn.querySelector('i');
+                
+                switch (repeatMode) {
+                    case 'none':
+                        repeatMode = 'all';
+                        repeatBtn.classList.add('active');
+                        repeatIcon.className = 'bi bi-arrow-repeat';
+                        repeatBtn.title = 'Répéter toute la playlist';
+                        break;
+                    case 'all':
+                        repeatMode = 'one';
+                        repeatIcon.className = 'bi bi-repeat-1';
+                        repeatBtn.title = 'Répéter la piste actuelle';
+                        break;
+                    case 'one':
+                        repeatMode = 'none';
+                        repeatBtn.classList.remove('active');
+                        repeatIcon.className = 'bi bi-arrow-repeat';
+                        repeatBtn.title = 'Répéter';
+                        break;
+                }
+            }
+            
+            // Gestionnaire d'événements pour le bouton shuffle
+            shuffleBtn.addEventListener('click', shufflePlaylist);
+            
+            // Gestionnaire d'événements pour le bouton repeat
+            repeatBtn.addEventListener('click', toggleRepeatMode);
             
             // Fonction pour jouer une piste
             function playTrack(index) {
@@ -267,8 +408,49 @@
                 isPlaying = true;
                 updatePlayPauseButton();
                 
-                // Mettre à jour les boutons des cartes
-                updateCardButtons();
+                // Mettre à jour les boutons des items
+                updateItemButtons();
+            }
+            
+            // Fonction pour passer à la piste suivante
+            function nextTrack() {
+                if (playlist.length === 0) return;
+                
+                if (repeatMode === 'one') {
+                    // Répéter la piste actuelle
+                    globalAudio.currentTime = 0;
+                    globalAudio.play();
+                    return;
+                }
+                
+                if (currentIndex < playlist.length - 1) {
+                    playTrack(currentIndex + 1);
+                } else {
+                    // Fin de la playlist
+                    if (repeatMode === 'all') {
+                        // Recommencer la playlist
+                        playTrack(0);
+                    } else {
+                        // Arrêter la lecture
+                        isPlaying = false;
+                        updatePlayPauseButton();
+                        updateItemButtons();
+                    }
+                }
+            }
+            
+            // Fonction pour passer à la piste précédente
+            function prevTrack() {
+                if (playlist.length === 0) return;
+                
+                if (currentIndex > 0) {
+                    playTrack(currentIndex - 1);
+                } else {
+                    // Si on est au début et que repeat all est activé
+                    if (repeatMode === 'all') {
+                        playTrack(playlist.length - 1);
+                    }
+                }
             }
             
             // Fonction pour mettre à jour le bouton play/pause
@@ -281,14 +463,20 @@
                 }
             }
             
-            // Fonction pour mettre à jour les boutons des cartes
-            function updateCardButtons() {
-                musicCards.forEach((card, index) => {
-                    const playButton = card.querySelector('.play-button i');
-                    if (index === currentIndex && isPlaying) {
-                        playButton.className = 'bi bi-pause-fill text-white';
+            // Fonction pour mettre à jour les boutons des items
+            function updateItemButtons() {
+                musicItems.forEach((item, index) => {
+                    const playButton = item.querySelector('.play-button i');
+                    const trackName = item.getAttribute('data-track-name');
+                    
+                    // Retirer la classe 'playing' de tous les items
+                    item.classList.remove('playing');
+                    
+                    if (currentTrack && trackName === currentTrack.name && isPlaying) {
+                        playButton.className = 'bi bi-pause-fill';
+                        item.classList.add('playing');
                     } else {
-                        playButton.className = 'bi bi-play-fill text-white';
+                        playButton.className = 'bi bi-play-fill';
                     }
                 });
             }
@@ -304,22 +492,13 @@
                         isPlaying = true;
                     }
                     updatePlayPauseButton();
-                    updateCardButtons();
+                    updateItemButtons();
                 }
             });
             
             // Gérer les boutons précédent/suivant
-            document.getElementById('prevBtn').addEventListener('click', function() {
-                if (currentIndex > 0) {
-                    playTrack(currentIndex - 1);
-                }
-            });
-            
-            document.getElementById('nextBtn').addEventListener('click', function() {
-                if (currentIndex < playlist.length - 1) {
-                    playTrack(currentIndex + 1);
-                }
-            });
+            document.getElementById('prevBtn').addEventListener('click', prevTrack);
+            document.getElementById('nextBtn').addEventListener('click', nextTrack);
             
             // Mettre à jour la barre de progression
             globalAudio.addEventListener('timeupdate', function() {
@@ -386,15 +565,27 @@
             
             // Gérer la fin de la piste
             globalAudio.addEventListener('ended', function() {
-                if (currentIndex < playlist.length - 1) {
-                    playTrack(currentIndex + 1);
+                nextTrack();
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('searchInput');
+        const musicItems = document.querySelectorAll('.music-item');
+
+        searchInput.addEventListener('input', function () {
+            const query = this.value.toLowerCase();
+
+            musicItems.forEach(item => {
+                const trackName = item.dataset.trackName.toLowerCase();
+                if (trackName.includes(query)) {
+                    item.style.display = 'flex'; // ou 'block' selon ton style
                 } else {
-                    isPlaying = false;
-                    updatePlayPauseButton();
-                    updateCardButtons();
+                    item.style.display = 'none';
                 }
             });
         });
+    });
     </script>
 </body>
 </html>

@@ -246,13 +246,16 @@ body {
     cursor: pointer;
     padding: 8px;
     border-radius: 50%;
-    transition: color 0.3s;
+    /* transition: color 0.3s; */
+    transition: all 0.2s ease;
 }
 
 .control-btn:hover {
     color: white;
 }
+/* ----------- */
 
+/* ------------ */
 .control-btn.play-pause {
     background-color: white;
     color: black;
@@ -457,3 +460,4 @@ audio {
         margin-left: 0;
     }
 }
+

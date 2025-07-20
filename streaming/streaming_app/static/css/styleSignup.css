@@ -1,0 +1,301 @@
+/* styleSignup.css */
+
+:root {
+    --spotify-green: #1DB954;
+    --spotify-dark: #121212;
+    --spotify-gray: #535353;
+    --spotify-light-gray: #b3b3b3;
+    --spotify-red: #e22134;
+}
+
+body {
+    background-color: var(--spotify-dark);
+    color: white;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+}
+
+/* Header avec logo */
+.header {
+    padding: 2rem 0;
+    text-align: left;
+    cursor: pointer;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--spotify-green);
+    
+}
+
+.logo i {
+    margin-right: 0.75rem;
+    font-size: 2.2rem;
+}
+
+/* Container principal */
+.main-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 0 4rem 0;
+}
+
+.signup-form {
+    width: 100%;
+    max-width: 500px;
+    text-align: center;
+}
+
+.title {
+    font-size: 2.8rem;
+    font-weight: bold;
+    margin-bottom: 2.5rem;
+    color: white;
+}
+
+.form-group {
+    text-align: left;
+    margin-bottom: 1.25rem;
+}
+
+.form-label {
+    color: var(--spotify-light-gray);
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.form-control {
+    background-color: #2a2a2a;
+    border: 2px solid #535353;
+    color: white;
+    padding: 0.875rem;
+    font-size: 0.95rem;
+    border-radius: 8px;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    background-color: #2a2a2a;
+    border-color: var(--spotify-green);
+    color: white;
+    box-shadow: 0 0 0 0.2rem rgba(29, 185, 84, 0.25);
+    outline: none;
+}
+
+.form-control::placeholder {
+    color: #666;
+}
+
+.form-control.is-invalid {
+    border-color: var(--spotify-red);
+    box-shadow: 0 0 0 0.2rem rgba(226, 33, 52, 0.25);
+}
+
+/* Champs de date */
+.form-control[type="date"] {
+    color-scheme: dark;
+}
+
+.password-container {
+    position: relative;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--spotify-light-gray);
+    cursor: pointer;
+    z-index: 10;
+    font-size: 1.1rem;
+    transition: color 0.3s ease;
+}
+
+.password-toggle:hover {
+    color: var(--spotify-green);
+}
+
+/* Options de genre */
+.gender-options {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 0.5rem;
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+}
+
+.form-check-input[type="radio"] {
+    background-color: transparent;
+    border: 2px solid var(--spotify-gray);
+    margin-right: 0.5rem;
+    width: 18px;
+    height: 18px;
+    margin-top: 0;
+}
+
+.form-check-input[type="radio"]:checked {
+    background-color: var(--spotify-green);
+    border-color: var(--spotify-green);
+}
+
+.form-check-input[type="radio"]:focus {
+    box-shadow: 0 0 0 0.2rem rgba(29, 185, 84, 0.25);
+}
+
+.form-check-label {
+    color: var(--spotify-light-gray);
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+/* Checkbox des conditions */
+.terms-check {
+    margin-top: 1rem;
+}
+
+.form-check-input[type="checkbox"] {
+    background-color: transparent;
+    border: 2px solid var(--spotify-gray);
+    width: 18px;
+    height: 18px;
+    margin-right: 0.75rem;
+    margin-top: 0.15rem;
+}
+
+.form-check-input[type="checkbox"]:checked {
+    background-color: var(--spotify-green);
+    border-color: var(--spotify-green);
+}
+
+.form-check-input[type="checkbox"]:focus {
+    box-shadow: 0 0 0 0.2rem rgba(29, 185, 84, 0.25);
+}
+
+.terms-check .form-check-label {
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.terms-link {
+    color: var(--spotify-green);
+    text-decoration: underline;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.terms-link:hover {
+    color: #1ed760;
+}
+
+.btn-signup {
+    background-color: var(--spotify-green);
+    border: none;
+    color: white;
+    font-weight: bold;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    border-radius: 50px;
+    width: 100%;
+    margin: 2rem 0 1.5rem 0;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.btn-signup:hover {
+    background-color: #1ed760;
+    transform: scale(1.02);
+    color: white;
+}
+
+.btn-signup:active {
+    transform: scale(0.98);
+}
+
+.login-link {
+    color: var(--spotify-light-gray);
+    margin-top: 2rem;
+    font-size: 0.95rem;
+}
+
+.login-link a {
+    color: var(--spotify-green);
+    text-decoration: underline;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.login-link a:hover {
+    color: #1ed760;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header {
+        padding: 1.5rem 0;
+    }
+    
+    .logo {
+        font-size: 1.5rem;
+    }
+    
+    .logo i {
+        font-size: 1.8rem;
+    }
+    
+    .title {
+        font-size: 2.2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .main-container {
+        padding: 1rem;
+    }
+    
+    .signup-form {
+        max-width: 100%;
+        padding: 0 1rem;
+    }
+    
+    .form-control {
+        padding: 0.75rem;
+    }
+    
+    .btn-signup {
+        padding: 0.875rem 1.5rem;
+    }
+    
+    .gender-options {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .header {
+        padding: 1rem 0;
+    }
+    
+    .title {
+        font-size: 1.8rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .terms-check .form-check-label {
+        font-size: 0.85rem;
+    }
+}

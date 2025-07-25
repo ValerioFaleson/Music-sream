@@ -1,591 +1,335 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
-    <!-- Bootstrap Icons en local - Les polices doivent être dans static/fonts/ -->
-    <link rel="stylesheet" href="{% static 'css/bootstrap-icons.css' %}">
-    <!-- Feuille de style personnalisée -->
-    <link rel="stylesheet" href="{% static 'css/styleHome.css' %}">
-    <title>Playaudio - Accueil</title>
-    
-    <style>
-        /* Styles pour les boutons actifs */
-        .control-btn.active {
-            color: #1ed760;
-        }
-        
-        /* Styles pour la liste des musiques */
-        .music-item {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .music-item:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-        }
-        
-        .music-item.playing {
-            background: rgba(30, 215, 96, 0.1);
-            border-color: #1ed760;
-        }
-        
-        .play-button {
-            width: 50px;
-            height: 50px;
-            background: #1ed760;
-            border: none;
-            color: white;
-            transition: all 0.3s ease;
-        }
-        
-        .play-button:hover {
-            background: #1db954;
-            transform: scale(1.1);
-        }
-        
-        .track-name {
-            color: #fff;
-            font-weight: 500;
-        }
-        
-        .music-item .text-muted {
-            color: rgba(255, 255, 255, 0.7) !important;
-        }
-    </style>
-</head>
-<body>
-    <!-- Container principal avec Bootstrap -->
-    <div class="container-fluid p-0">
-        <!-- Sidebar (barre latérale) -->
-        <div class="sidebar" id="sidebar">
-            <!-- Bouton pour réduire/agrandir la sidebar -->
-            <button class="toggle-btn" id="toggleBtn" title="Réduire/Agrandir">
-                <i class="bi bi-list"></i>
-            </button>
-            
-            <!-- Logo/Titre de l'application -->
-            <div class="logo">
-                <i class="bi bi-music-note-beamed"></i>
-                <span class="logo-text">Playaudio</span>
-            </div>
-            
-            <!-- Navigation principale -->
-            <nav class="nav flex-column">
-                <a href="#" class="nav-link">
-                    <i class="bi bi-house-door me-2"></i>
-                    <span class="nav-text">Accueil</span>
-                </a>
-                <a href="#" class="nav-link">
-                    <i class="bi bi-search me-2"></i>
-                    <span class="nav-text">Rechercher</span>
-                </a>
-                <a href="#" class="nav-link">
-                    <i class="bi bi-collection me-2"></i>
-                    <span class="nav-text">Ma bibliothèque</span>
-                </a>
-            </nav>
+{% extends 'base.html' %}
 
-            <!-- Section Playlist -->
-            <div class="mt-4">
-                <h6 class="text-uppercase text-muted mb-3 section-title">Playlists</h6>
-                <a href="#" class="nav-link">
-                    <i class="bi bi-plus-square me-2"></i>
-                    <span class="nav-text">Créer une playlist</span>
-                </a>
-                <a href="#" class="nav-link">
-                    <i class="bi bi-heart me-2"></i>
-                    <span class="nav-text">Titres likés</span>
-                </a>
-            </div>
-        </div>
+{% block title %}Playaudio - Accueil{% endblock %}
 
-        <!-- Zone de contenu principal -->
-        <div class="main-content" id="mainContent">
-            <!-- Header avec gradient -->
-            <div class="content-header">
-                <div class="d-flex justify-content-between align-items-center p-3 bg-dark">
-                    <!-- Barre de recherche avec icône -->
-                    <div class="input-group" style="max-width: 400px;">
-                        <!-- Icône de recherche à gauche -->
-                        <span class="input-group-text bg-secondary border-0">
-                            <i class="bi bi-search text-white"></i>
-                        </span>
-                        <!-- Champ de recherche -->
-                        <input type="text" class="form-control bg-secondary text-white border-0" 
-                               placeholder="Rechercher une music ..." id="searchInput">
-                    </div>
+{% block nav_home %}active{% endblock %}
 
-                    {% if user.is_authenticated %}
-                        <!-- Avatar + bouton déconnexion -->
-                        <div class="d-flex align-items-center gap-3">
-                            <!-- Avatar -->
-                            <div class="user-avatar bg-success text-white fw-bold text-uppercase d-flex justify-content-center align-items-center rounded-circle" style="width: 40px; height: 40px;">
-                                {{ user.username|first }}
-                            </div>
+{% block page_title %}Playlist disponible{% endblock %}
 
-                            <!-- Bouton déconnexion -->
-                            <a class="btn btn-outline-light px-4 py-2" href="{% url 'logout' %}">Déconnexion</a>
-                        </div>
-                    {% else %}
-                        <!-- Connexion et inscription si pas connecté -->
-                        <div class="d-flex align-items-center gap-3">
-                            <a class="btn btn-outline-light px-4 py-2" href="{% url 'login' %}">Connexion</a>
-                            <a class="btn btn-success px-4 py-2" href="{% url 'register' %}">Inscription</a>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-
-            <!-- Section principale avec la playlist -->
-            <div class="row">
-                <div class="col-12">
-                    <h2 class="section-title">
-                        <i class="bi bi-music-note-list me-2"></i>
-                        Playlist disponible
-                    </h2>
-                    
-                    <!-- Liste des pistes audio ligne par ligne -->
-                    <div class="music-list" id="musicList">
-                        <!-- Boucle Django pour afficher chaque piste -->
-                        {% for audio in playlist %}
-                            <div class="row music-item mb-3 p-3 rounded" data-audio-src="{% url 'play_audio' audio %}" data-track-name="{{ audio }}">
-                                <div class="col-auto">
-                                    <!-- Bouton de lecture -->
-                                    <button class="play-button btn rounded-circle d-flex align-items-center justify-content-center">
-                                        <i class="bi bi-play-fill"></i>
-                                    </button>
-                                </div>
-                                <div class="col">
-                                    <!-- Nom de la piste -->
-                                    <h5 class="track-name mb-1">{{ audio }}</h5>
-                                    <!-- Description -->
-                                    <p class="text-muted small mb-0">Cliquez sur le bouton play pour écouter</p>
-                                </div>
-                            </div>
-                        {% empty %}
-                            <!-- Message affiché quand aucune musique n'est disponible -->
-                            <div class="no-music text-center py-5">
-                                <i class="bi bi-music-note-beamed display-1 text-muted"></i>
-                                <p class="mt-3 text-white">Aucun morceau disponible pour le moment.</p>
-                                <p class="small text-muted">Revenez plus tard pour découvrir de nouvelles musiques !</p>
-                            </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
+{% block main_content %}
+    <!-- Bouton lire toute la playlist -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <button id="playAllBtn" class="btn btn-success">
+            <i class="bi bi-play-circle-fill me-2"></i> Lire toute la playlist
+        </button>
     </div>
 
-    <!-- Lecteur audio global (comme Spotify) -->
-    <div class="audio-player">
-        <!-- Informations de la piste actuelle -->
-        <div class="current-track">
-            <div class="track-image">
-                <i class="bi bi-music-note-beamed text-white"></i>
-            </div>
-            <div class="track-info">
-                <h4 id="currentTrackName">Aucune piste sélectionnée</h4>
-                <p>Choisissez une musique</p>
-            </div>
-        </div>
-
-        <!-- Contrôles centraux -->
-        <div class="player-controls">
-            <div class="control-buttons">
-                <button class="control-btn" id="shuffleBtn" title="Lecture aléatoire">
-                    <i class="bi bi-shuffle"></i>
-                </button>
-                <button class="control-btn" id="prevBtn" title="Précédent">
-                    <i class="bi bi-skip-start-fill"></i>
-                </button>
-                <button class="control-btn play-pause" id="playPauseBtn" title="Lecture/Pause">
-                    <i class="bi bi-play-fill"></i>
-                </button>
-                <button class="control-btn" id="nextBtn" title="Suivant">
-                    <i class="bi bi-skip-end-fill"></i>
-                </button>
-                <button class="control-btn" id="repeatBtn" title="Répéter">
-                    <i class="bi bi-arrow-repeat"></i>
-                </button>
-            </div>
-            
-            <!-- Barre de progression -->
-            <div class="progress-container">
-                <span class="time-display" id="currentTime">0:00</span>
-                <div class="progress-bar" id="progressBar">
-                    <div class="progress-fill" id="progressFill"></div>
+    <!-- Liste des pistes audio ligne par ligne -->
+    <div class="music-list" id="musicList">
+        <!-- Boucle Django pour afficher chaque piste -->
+        {% for audio in playlist %}
+            <div class="row music-item mb-3 p-3 rounded" data-audio-src="{% url 'play_audio' audio %}" data-track-name="{{ audio }}" data-searchable="{{ audio }}">
+                <div class="col-auto">
+                    <!-- Bouton de lecture -->
+                    <button class="play-button btn rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="bi bi-play-fill"></i>
+                    </button>
                 </div>
-                <span class="time-display" id="totalTime">0:00</span>
+                <div class="col">
+                    <!-- Nom de la piste -->
+                    <h5 class="track-name mb-1">{{ audio }}</h5>
+                    <!-- Description -->
+                    <p class="text-muted small mb-0">Cliquez sur le bouton play pour écouter</p>
+                </div>
             </div>
-        </div>
-
-        <!-- Contrôles de volume -->
-        <div class="volume-controls">
-            <button class="control-btn" id="volumeBtn" title="Volume">
-                <i class="bi bi-volume-up"></i>
-            </button>
-            <div class="volume-slider" id="volumeSlider">
-                <div class="volume-fill" id="volumeFill"></div>
+            
+        {% empty %}
+            <!-- Message affiché quand aucune musique n'est disponible -->
+            <div class="no-music text-center py-5">
+                <i class="bi bi-music-note-beamed display-1 text-muted"></i>
+                <p class="mt-3 text-white">Aucun morceau disponible pour le moment.</p>
+                <p class="small text-muted">Revenez plus tard pour découvrir de nouvelles musiques !</p>
             </div>
-        </div>
-
-        <!-- Élément audio caché pour la lecture -->
-        <audio id="globalAudio" preload="metadata"></audio>
+        {% endfor %}
     </div>
+{% endblock %}
 
-    <!-- Bootstrap JavaScript -->
-    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+{% block page_initialization %}
+    // Créer la playlist à partir des éléments musicaux
+    const musicItems = document.querySelectorAll('.music-item');
+    musicItems.forEach((item, index) => {
+        const audioSrc = item.getAttribute('data-audio-src');
+        const trackName = item.getAttribute('data-track-name');
+        if (audioSrc && trackName) {
+            playlist.push({ src: audioSrc, name: trackName });
+        }
+    });
     
-    <!-- Script JavaScript personnalisé -->
-    <script>
-        const isAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
-        // Variables globales pour le lecteur audio
-        let currentTrack = null;
-        let playlist = [];
-        let originalPlaylist = []; // Pour sauvegarder l'ordre original
-        let currentIndex = 0;
-        let isPlaying = false;
-        let isShuffled = false;
-        let repeatMode = 'none'; // 'none', 'all', 'one'
-        
-        // Fonction pour gérer la sidebar réduite/agrandie
-        document.addEventListener('DOMContentLoaded', function() {
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('mainContent');
-            const toggleBtn = document.getElementById('toggleBtn');
-            
-            // Éléments du lecteur audio
-            const globalAudio = document.getElementById('globalAudio');
-            const playPauseBtn = document.getElementById('playPauseBtn');
-            const currentTrackName = document.getElementById('currentTrackName');
-            const currentTime = document.getElementById('currentTime');
-            const totalTime = document.getElementById('totalTime');
-            const progressBar = document.getElementById('progressBar');
-            const progressFill = document.getElementById('progressFill');
-            const volumeSlider = document.getElementById('volumeSlider');
-            const volumeFill = document.getElementById('volumeFill');
-            const volumeBtn = document.getElementById('volumeBtn');
-            const shuffleBtn = document.getElementById('shuffleBtn');
-            const repeatBtn = document.getElementById('repeatBtn');
-            
-            // Fonction pour basculer la sidebar
-            toggleBtn.addEventListener('click', function() {
-                sidebar.classList.toggle('collapsed');
-                mainContent.classList.toggle('collapsed');
-                
-                // Changer l'icône du bouton
-                const icon = toggleBtn.querySelector('i');
-                if (sidebar.classList.contains('collapsed')) {
-                    icon.className = 'bi bi-arrow-right';
-                    toggleBtn.title = 'Agrandir';
-                } else {
-                    icon.className = 'bi bi-list';
-                    toggleBtn.title = 'Réduire';
-                }
-            });
-            
-            // Créer la playlist à partir des éléments musicaux (maintenant des rows)
-            const musicItems = document.querySelectorAll('.music-item');
-            musicItems.forEach((item, index) => {
-                const audioSrc = item.getAttribute('data-audio-src');
-                const trackName = item.getAttribute('data-track-name');
-                if (audioSrc && trackName) {
-                    playlist.push({ src: audioSrc, name: trackName });
-                }
-            });
-            
-            // Sauvegarder l'ordre original
-            originalPlaylist = [...playlist];
-            
-            // Gérer les clics sur les boutons de lecture des items
-            musicItems.forEach((item, index) => {
-                const playButton = item.querySelector('.play-button');
-                if (playButton) {
-                    playButton.addEventListener('click', function(e) {
-                        if (!isAuthenticated) {
-                            e.preventDefault();
-                            window.location.href = "{% url 'login' %}";
-                            return;
-                        }
-                        playTrack(index);
-                    });
-                }
-
-                
-                // Gérer le clic sur toute la ligne
-                item.addEventListener('click', function(e) {
-                    // Ne pas déclencher si on clique sur le bouton
-                    if (!e.target.closest('.play-button')) {
-                            if (!isAuthenticated) {
-                                e.preventDefault();
-                                window.location.href = "{% url 'login' %}";
-                                return;
-                            }
-                            playTrack(index);
-                        }
-
-                });
-            });
-            
-            // Fonction pour mélanger la playlist
-            function shufflePlaylist() {
-                if (isShuffled) {
-                    // Restaurer l'ordre original
-                    playlist = [...originalPlaylist];
-                    isShuffled = false;
-                    shuffleBtn.classList.remove('active');
-                    shuffleBtn.title = 'Lecture aléatoire';
-                } else {
-                    // Mélanger la playlist
-                    const currentTrackData = playlist[currentIndex];
-                    playlist = [...playlist].sort(() => Math.random() - 0.5);
-                    // Mettre la piste actuelle en première position
-                    if (currentTrackData) {
-                        const newIndex = playlist.findIndex(track => track.src === currentTrackData.src);
-                        if (newIndex > 0) {
-                            [playlist[0], playlist[newIndex]] = [playlist[newIndex], playlist[0]];
-                        }
-                        currentIndex = 0;
-                    }
-                    isShuffled = true;
-                    shuffleBtn.classList.add('active');
-                    shuffleBtn.title = 'Lecture aléatoire activée';
-                }
-            }
-            
-            // Fonction pour gérer les modes de répétition
-            function toggleRepeatMode() {
-                const repeatIcon = repeatBtn.querySelector('i');
-                
-                switch (repeatMode) {
-                    case 'none':
-                        repeatMode = 'all';
-                        repeatBtn.classList.add('active');
-                        repeatIcon.className = 'bi bi-arrow-repeat';
-                        repeatBtn.title = 'Répéter toute la playlist';
-                        break;
-                    case 'all':
-                        repeatMode = 'one';
-                        repeatIcon.className = 'bi bi-repeat-1';
-                        repeatBtn.title = 'Répéter la piste actuelle';
-                        break;
-                    case 'one':
-                        repeatMode = 'none';
-                        repeatBtn.classList.remove('active');
-                        repeatIcon.className = 'bi bi-arrow-repeat';
-                        repeatBtn.title = 'Répéter';
-                        break;
-                }
-            }
-            
-            // Gestionnaire d'événements pour le bouton shuffle
-            shuffleBtn.addEventListener('click', shufflePlaylist);
-            
-            // Gestionnaire d'événements pour le bouton repeat
-            repeatBtn.addEventListener('click', toggleRepeatMode);
-            
-            // Fonction pour jouer une piste
-            function playTrack(index) {
-                if (playlist.length === 0) return;
-                
-                currentIndex = index;
-                currentTrack = playlist[index];
-                
-                // Mettre à jour l'affichage
-                currentTrackName.textContent = currentTrack.name;
-                globalAudio.src = currentTrack.src;
-                
-                // Jouer la piste
-                globalAudio.play();
-                isPlaying = true;
-                updatePlayPauseButton();
-                
-                // Mettre à jour les boutons des items
-                updateItemButtons();
-            }
-            
-            // Fonction pour passer à la piste suivante
-            function nextTrack() {
-                if (playlist.length === 0) return;
-                
-                if (repeatMode === 'one') {
-                    // Répéter la piste actuelle
-                    globalAudio.currentTime = 0;
-                    globalAudio.play();
+    // Sauvegarder l'ordre original
+    originalPlaylist = [...playlist];
+    
+    // Gérer les clics sur les boutons de lecture des items
+    musicItems.forEach((item, index) => {
+        const playButton = item.querySelector('.play-button');
+        if (playButton) {
+            playButton.addEventListener('click', function(e) {
+                if (!isAuthenticated) {
+                    e.preventDefault();
+                    window.location.href = "{% url 'login' %}";
                     return;
                 }
-                
-                if (currentIndex < playlist.length - 1) {
-                    playTrack(currentIndex + 1);
-                } else {
-                    // Fin de la playlist
-                    if (repeatMode === 'all') {
-                        // Recommencer la playlist
-                        playTrack(0);
-                    } else {
-                        // Arrêter la lecture
-                        isPlaying = false;
-                        updatePlayPauseButton();
-                        updateItemButtons();
-                    }
+                playTrack(index);
+            });
+        }
+        
+        // Gérer le clic sur toute la ligne
+        item.addEventListener('click', function(e) {
+            // Ne pas déclencher si on clique sur le bouton
+            if (!e.target.closest('.play-button')) {
+                if (!isAuthenticated) {
+                    e.preventDefault();
+                    window.location.href = "{% url 'login' %}";
+                    return;
                 }
+                playTrack(index);
             }
-            
-            // Fonction pour passer à la piste précédente
-            function prevTrack() {
-                if (playlist.length === 0) return;
-                
-                if (currentIndex > 0) {
-                    playTrack(currentIndex - 1);
-                } else {
-                    // Si on est au début et que repeat all est activé
-                    if (repeatMode === 'all') {
-                        playTrack(playlist.length - 1);
-                    }
-                }
-            }
-            
-            // Fonction pour mettre à jour le bouton play/pause
-            function updatePlayPauseButton() {
-                const icon = playPauseBtn.querySelector('i');
-                if (isPlaying) {
-                    icon.className = 'bi bi-pause-fill';
-                } else {
-                    icon.className = 'bi bi-play-fill';
-                }
-            }
-            
-            // Fonction pour mettre à jour les boutons des items
-            function updateItemButtons() {
-                musicItems.forEach((item, index) => {
-                    const playButton = item.querySelector('.play-button i');
-                    const trackName = item.getAttribute('data-track-name');
-                    
-                    // Retirer la classe 'playing' de tous les items
-                    item.classList.remove('playing');
-                    
-                    if (currentTrack && trackName === currentTrack.name && isPlaying) {
-                        playButton.className = 'bi bi-pause-fill';
-                        item.classList.add('playing');
-                    } else {
-                        playButton.className = 'bi bi-play-fill';
-                    }
-                });
-            }
-            
-            // Gérer le bouton play/pause global
-            playPauseBtn.addEventListener('click', function() {
-                if (currentTrack) {
-                    if (isPlaying) {
-                        globalAudio.pause();
-                        isPlaying = false;
-                    } else {
-                        globalAudio.play();
-                        isPlaying = true;
-                    }
-                    updatePlayPauseButton();
-                    updateItemButtons();
-                }
-            });
-            
-            // Gérer les boutons précédent/suivant
-            document.getElementById('prevBtn').addEventListener('click', prevTrack);
-            document.getElementById('nextBtn').addEventListener('click', nextTrack);
-            
-            // Mettre à jour la barre de progression
-            globalAudio.addEventListener('timeupdate', function() {
-                const current = globalAudio.currentTime;
-                const duration = globalAudio.duration;
-                
-                if (duration) {
-                    const progress = (current / duration) * 100;
-                    progressFill.style.width = progress + '%';
-                    
-                    // Mettre à jour le temps affiché
-                    currentTime.textContent = formatTime(current);
-                    totalTime.textContent = formatTime(duration);
-                }
-            });
-            
-            // Gérer le clic sur la barre de progression
-            progressBar.addEventListener('click', function(e) {
-                if (globalAudio.duration) {
-                    const rect = progressBar.getBoundingClientRect();
-                    const percent = (e.clientX - rect.left) / rect.width;
-                    globalAudio.currentTime = percent * globalAudio.duration;
-                }
-            });
-            
-            // Gérer le volume
-            volumeSlider.addEventListener('click', function(e) {
-                const rect = volumeSlider.getBoundingClientRect();
-                const percent = (e.clientX - rect.left) / rect.width;
-                globalAudio.volume = percent;
-                volumeFill.style.width = percent * 100 + '%';
-                
-                // Mettre à jour l'icône du volume
-                const volumeIcon = volumeBtn.querySelector('i');
-                if (percent === 0) {
-                    volumeIcon.className = 'bi bi-volume-mute';
-                } else if (percent < 0.5) {
-                    volumeIcon.className = 'bi bi-volume-down';
-                } else {
-                    volumeIcon.className = 'bi bi-volume-up';
-                }
-            });
-            
-            // Gérer le bouton de volume (mute/unmute)
-            volumeBtn.addEventListener('click', function() {
-                const volumeIcon = volumeBtn.querySelector('i');
-                if (globalAudio.volume > 0) {
-                    globalAudio.volume = 0;
-                    volumeFill.style.width = '0%';
-                    volumeIcon.className = 'bi bi-volume-mute';
-                } else {
-                    globalAudio.volume = 0.8;
-                    volumeFill.style.width = '80%';
-                    volumeIcon.className = 'bi bi-volume-up';
-                }
-            });
-            
-            // Fonction pour formater le temps
-            function formatTime(seconds) {
-                const mins = Math.floor(seconds / 60);
-                const secs = Math.floor(seconds % 60);
-                return mins + ':' + (secs < 10 ? '0' : '') + secs;
-            }
-            
-            // Gérer la fin de la piste
-            globalAudio.addEventListener('ended', function() {
-                nextTrack();
-            });
-        });
-
-        document.addEventListener('DOMContentLoaded', function () {
-        const searchInput = document.getElementById('searchInput');
-        const musicItems = document.querySelectorAll('.music-item');
-
-        searchInput.addEventListener('input', function () {
-            const query = this.value.toLowerCase();
-
-            musicItems.forEach(item => {
-                const trackName = item.dataset.trackName.toLowerCase();
-                if (trackName.includes(query)) {
-                    item.style.display = 'flex'; // ou 'block' selon ton style
-                } else {
-                    item.style.display = 'none';
-                }
-            });
         });
     });
-    </script>
-</body>
-</html>
+
+    // Lecture de toute la playlist
+    document.getElementById('playAllBtn').addEventListener('click', () => {
+        if (!isAuthenticated) {
+            window.location.href = "{% url 'login' %}";
+            return;
+        }
+        if (playlist.length > 0) {
+            playTrack(0); // joue la première piste
+        }
+    });
+{% endblock %}
+
+{% block audio_functions %}
+    // Fonction pour mélanger la playlist
+    function shufflePlaylist() {
+        if (isShuffled) {
+            // Restaurer l'ordre original
+            playlist = [...originalPlaylist];
+            isShuffled = false;
+            shuffleBtn.classList.remove('active');
+            shuffleBtn.title = 'Lecture aléatoire';
+        } else {
+            // Mélanger la playlist
+            const currentTrackData = playlist[currentIndex];
+            playlist = [...playlist].sort(() => Math.random() - 0.5);
+            // Mettre la piste actuelle en première position
+            if (currentTrackData) {
+                const newIndex = playlist.findIndex(track => track.src === currentTrackData.src);
+                if (newIndex > 0) {
+                    [playlist[0], playlist[newIndex]] = [playlist[newIndex], playlist[0]];
+                }
+                currentIndex = 0;
+            }
+            isShuffled = true;
+            shuffleBtn.classList.add('active');
+            shuffleBtn.title = 'Lecture aléatoire activée';
+        }
+    }
+    
+    // Fonction pour gérer les modes de répétition
+    function toggleRepeatMode() {
+        const repeatIcon = repeatBtn.querySelector('i');
+        
+        switch (repeatMode) {
+            case 'none':
+                repeatMode = 'all';
+                repeatBtn.classList.add('active');
+                repeatIcon.className = 'bi bi-arrow-repeat';
+                repeatBtn.title = 'Répéter toute la playlist';
+                break;
+            case 'all':
+                repeatMode = 'one';
+                repeatIcon.className = 'bi bi-repeat-1';
+                repeatBtn.title = 'Répéter la piste actuelle';
+                break;
+            case 'one':
+                repeatMode = 'none';
+                repeatBtn.classList.remove('active');
+                repeatIcon.className = 'bi bi-arrow-repeat';
+                repeatBtn.title = 'Répéter';
+                break;
+        }
+    }
+    
+    // Gestionnaire d'événements pour le bouton shuffle
+    shuffleBtn.addEventListener('click', shufflePlaylist);
+    
+    // Gestionnaire d'événements pour le bouton repeat
+    repeatBtn.addEventListener('click', toggleRepeatMode);
+    
+    // Fonction pour jouer une piste
+    function playTrack(index) {
+        if (playlist.length === 0) return;
+        
+        currentIndex = index;
+        currentTrack = playlist[index];
+        
+        // Mettre à jour l'affichage
+        currentTrackName.textContent = currentTrack.name;
+        globalAudio.src = currentTrack.src;
+        
+        // Jouer la piste
+        globalAudio.play();
+        isPlaying = true;
+        updatePlayPauseButton();
+        
+        // Mettre à jour les boutons des items
+        updateItemButtons();
+    }
+    
+    // Fonction pour passer à la piste suivante
+    function nextTrack() {
+        if (playlist.length === 0) return;
+        
+        if (repeatMode === 'one') {
+            // Répéter la piste actuelle
+            globalAudio.currentTime = 0;
+            globalAudio.play();
+            return;
+        }
+        
+        if (currentIndex < playlist.length - 1) {
+            playTrack(currentIndex + 1);
+        } else {
+            // Fin de la playlist
+            if (repeatMode === 'all') {
+                // Recommencer la playlist
+                playTrack(0);
+            } else {
+                // Arrêter la lecture
+                isPlaying = false;
+                updatePlayPauseButton();
+                updateItemButtons();
+            }
+        }
+    }
+    
+    // Fonction pour passer à la piste précédente
+    function prevTrack() {
+        if (playlist.length === 0) return;
+        
+        if (currentIndex > 0) {
+            playTrack(currentIndex - 1);
+        } else {
+            // Si on est au début et que repeat all est activé
+            if (repeatMode === 'all') {
+                playTrack(playlist.length - 1);
+            }
+        }
+    }
+    
+    // Fonction pour mettre à jour le bouton play/pause
+    function updatePlayPauseButton() {
+        const icon = playPauseBtn.querySelector('i');
+        if (isPlaying) {
+            icon.className = 'bi bi-pause-fill';
+        } else {
+            icon.className = 'bi bi-play-fill';
+        }
+    }
+    
+    // Fonction pour mettre à jour les boutons des items
+    function updateItemButtons() {
+        const musicItems = document.querySelectorAll('.music-item');
+        musicItems.forEach((item, index) => {
+            const playButton = item.querySelector('.play-button i');
+            const trackName = item.getAttribute('data-track-name');
+            
+            // Retirer la classe 'playing' de tous les items
+            item.classList.remove('playing');
+            
+            if (currentTrack && trackName === currentTrack.name && isPlaying) {
+                playButton.className = 'bi bi-pause-fill';
+                item.classList.add('playing');
+            } else {
+                playButton.className = 'bi bi-play-fill';
+            }
+        });
+    }
+    
+    // Gérer le bouton play/pause global
+    playPauseBtn.addEventListener('click', function() {
+        if (currentTrack) {
+            if (isPlaying) {
+                globalAudio.pause();
+                isPlaying = false;
+            } else {
+                globalAudio.play();
+                isPlaying = true;
+            }
+            updatePlayPauseButton();
+            updateItemButtons();
+        }
+    });
+    
+    // Gérer les boutons précédent/suivant
+    document.getElementById('prevBtn').addEventListener('click', prevTrack);
+    document.getElementById('nextBtn').addEventListener('click', nextTrack);
+    
+    // Mettre à jour la barre de progression
+    globalAudio.addEventListener('timeupdate', function() {
+        const current = globalAudio.currentTime;
+        const duration = globalAudio.duration;
+        
+        if (duration) {
+            const progress = (current / duration) * 100;
+            progressFill.style.width = progress + '%';
+            
+            // Mettre à jour le temps affiché
+            currentTime.textContent = formatTime(current);
+            totalTime.textContent = formatTime(duration);
+        }
+    });
+    
+    // Gérer le clic sur la barre de progression
+    progressBar.addEventListener('click', function(e) {
+        if (globalAudio.duration) {
+            const rect = progressBar.getBoundingClientRect();
+            const percent = (e.clientX - rect.left) / rect.width;
+            globalAudio.currentTime = percent * globalAudio.duration;
+        }
+    });
+    
+    // Gérer le volume
+    volumeSlider.addEventListener('click', function(e) {
+        const rect = volumeSlider.getBoundingClientRect();
+        const percent = (e.clientX - rect.left) / rect.width;
+        globalAudio.volume = percent;
+        volumeFill.style.width = percent * 100 + '%';
+        
+        // Mettre à jour l'icône du volume
+        const volumeIcon = volumeBtn.querySelector('i');
+        if (percent === 0) {
+            volumeIcon.className = 'bi bi-volume-mute';
+        } else if (percent < 0.5) {
+            volumeIcon.className = 'bi bi-volume-down';
+        } else {
+            volumeIcon.className = 'bi bi-volume-up';
+        }
+    });
+    
+    // Gérer le bouton de volume (mute/unmute)
+    volumeBtn.addEventListener('click', function() {
+        const volumeIcon = volumeBtn.querySelector('i');
+        if (globalAudio.volume > 0) {
+            globalAudio.volume = 0;
+            volumeFill.style.width = '0%';
+            volumeIcon.className = 'bi bi-volume-mute';
+        } else {
+            globalAudio.volume = 0.8;
+            volumeFill.style.width = '80%';
+            volumeIcon.className = 'bi bi-volume-up';
+        }
+    });
+    
+    // Fonction pour formater le temps
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return mins + ':' + (secs < 10 ? '0' : '') + secs;
+    }
+    
+    // Gérer la fin de la piste
+    globalAudio.addEventListener('ended', function() {
+        nextTrack();
+    });
+{% endblock %}

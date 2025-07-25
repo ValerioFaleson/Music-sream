@@ -13,7 +13,7 @@ from django.contrib.auth import login as auth_login
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import logout
 
-# from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 # def home(request):
@@ -36,7 +36,7 @@ def home(request):
 
 
 from django.http import StreamingHttpResponse
-# @login_required(login_url='login')  # redirection vers 'login' si non connecté
+@login_required(login_url='login')  # redirection vers 'login' si non connecté
 def play_audio(request, filename):
     HOST = '127.0.0.1'
     PORT = 50007
@@ -55,7 +55,6 @@ def play_audio(request, filename):
     response = StreamingHttpResponse(audio_stream(), content_type='audio/mpeg')
     response['Content-Disposition'] = f'inline; filename="{filename}"'
     return response
-
 
 
 def register_view(request):
@@ -87,5 +86,7 @@ def logout_view(request):
     logout(request)
     return redirect('login')
 
-# def register_view(request):
-#     return render(request, 'register.html')
+def base_view(request):
+    return render(request, 'base.html')
+
+

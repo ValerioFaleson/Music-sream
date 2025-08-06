@@ -35,5 +35,9 @@ class PlaylistItem(models.Model):
     def __str__(self):
         return self.filename
 
+class PlaylistTrack(models.Model):
+    playlist = models.ForeignKey(Playlist, on_delete=models.CASCADE, related_name='tracks')
+    track_name = models.CharField(max_length=255)  # ou ForeignKey si tu as un modèle Track
+    added_at = models.DateTimeField(auto_now_add=True)
 
 # Create your models here.

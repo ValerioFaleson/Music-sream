@@ -1,9 +1,10 @@
 import socket
 import threading
 import os
+import struct  # Ajouté pour envoyer la taille du fichier
 
 AUDIO_FOLDER = r"C:\Users\Valerio\Downloads\Music"
-HOST = '0.0.0.0'  # écoute toutes les interfaces réseau
+HOST = '0.0.0.0'
 PORT = 50007
 
 def get_playlist():
@@ -11,9 +12,13 @@ def get_playlist():
 
 def stream_audio(conn, filename):
     try:
-        with open(os.path.join(AUDIO_FOLDER, filename), 'rb') as f:
+        filepath = os.path.join(AUDIO_FOLDER, filename)
+        filesize = os.path.getsize(filepath)
+        # Envoyer la taille du fichier sur 8 octets (unsigned long long)
+        conn.sendall(struct.pack('!Q', filesize))
+        with open(filepath, 'rb') as f:
             while True:
-                data = f.read(1024)
+                data = f.read(4096)
                 if not data:
                     break
                 conn.sendall(data)
@@ -27,9 +32,13 @@ def handle_client(conn, addr):
 
     try:
         filename = conn.recv(1024).decode().strip()
+        # Sécurité : empêcher les chemins relatifs
+        filename = os.path.basename(filename)
         if filename in playlist:
             stream_audio(conn, filename)
         else:
+            # Envoyer 0 comme taille pour signaler l'erreur
+            conn.sendall(struct.pack('!Q', 0))
             conn.sendall(b'Fichier non trouve')
     except Exception as e:
         print(f"Erreur client {addr} :", e)

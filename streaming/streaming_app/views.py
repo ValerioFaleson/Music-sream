@@ -14,7 +14,8 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import logout
 
 from django.contrib.auth.decorators import login_required
-
+from .models import Playlist, PlaylistTrack
+from django.shortcuts import get_object_or_404
 # Create your views here.
 # def home(request):
 #     return render(request, 'home.html')
@@ -32,7 +33,12 @@ def home(request):
             playlist = data.split('\n')
     except Exception as e:
         playlist = []
-    return render(request, 'home.html', {'playlist': playlist})
+    # Ajout de user_playlists pour la sidebar
+    user_playlists = Playlist.objects.filter(user=request.user) if request.user.is_authenticated else []
+    return render(request, 'home.html', {
+        'playlist': playlist,
+        'user_playlists': user_playlists,
+    })
 
 
 from django.http import StreamingHttpResponse
@@ -89,4 +95,51 @@ def logout_view(request):
 def base_view(request):
     return render(request, 'base.html')
 
+@login_required
+def playlists_view(request):
+    playlists = Playlist.objects.filter(user=request.user)
+    return render(request, 'playlists.html', {'playlists': playlists})
 
+@login_required
+def create_playlist(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        if name:
+            Playlist.objects.create(name=name, user=request.user)
+    return redirect('home')
+
+@login_required
+def delete_playlist(request, playlist_id):
+    playlist = get_object_or_404(Playlist, id=playlist_id, user=request.user)
+    playlist.delete()
+    return redirect('home')
+
+@login_required
+def edit_playlist(request, playlist_id):
+    playlist = get_object_or_404(Playlist, id=playlist_id, user=request.user)
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        if name:
+            playlist.name = name
+            playlist.save()
+    return redirect('playlist_detail', playlist_id=playlist.id)
+
+@login_required
+def playlist_detail(request, playlist_id):
+    playlist = get_object_or_404(Playlist, id=playlist_id, user=request.user)
+    tracks = PlaylistTrack.objects.filter(playlist=playlist)
+    user_playlists = Playlist.objects.filter(user=request.user) if request.user.is_authenticated else []
+    return render(request, 'playlist_detail.html', {
+        'playlist': playlist,
+        'tracks': tracks,
+        'user_playlists': user_playlists,
+    })
+    
+@login_required
+def add_to_playlist(request, playlist_id):
+    if request.method == 'POST':
+        playlist = get_object_or_404(Playlist, id=playlist_id, user=request.user)
+        track_name = request.POST.get('track_name')
+        if track_name:
+            PlaylistTrack.objects.get_or_create(playlist=playlist, track_name=track_name)
+    return redirect('home')

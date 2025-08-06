@@ -1,90 +1,63 @@
 {% extends 'base.html' %}
-
-{% block title %}Playaudio - Accueil{% endblock %}
-
-{% block nav_home %}active{% endblock %}
-
-{% block page_title %}Playlist disponible{% endblock %}
-
-{% block main_content %}
-    <!-- Bouton lire toute la playlist -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <button id="playAllBtn" class="btn btn-success">
-            <i class="bi bi-play-circle-fill me-2"></i> Lire toute la playlist
+{% block content %}
+<div class="d-flex align-items-center mb-3">
+    <h2 class="me-3 mb-0">{{ playlist.name }}</h2>
+    <!-- Bouton Renommer -->
+    <button class="btn btn-sm btn-outline-secondary me-2" data-bs-toggle="modal" data-bs-target="#editPlaylistModal">
+        <i class="bi bi-pencil"></i> Renommer
+    </button>
+    <!-- Bouton Supprimer -->
+    <form method="post" action="{% url 'delete_playlist' playlist.id %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Supprimer cette playlist ?');">
+            <i class="bi bi-trash"></i> Supprimer
         </button>
-    </div>
-
-    <!-- Liste des pistes audio ligne par ligne -->
-    <div class="music-list" id="musicList">
-    {% for audio in playlist %}
-        <div class="row music-item mb-3 p-3 rounded" data-audio-src="{% url 'play_audio' audio %}" data-track-name="{{ audio }}" data-searchable="{{ audio }}">
-    <div class="col d-flex align-items-center">
-        <!-- Bouton de lecture -->
-        <button class="play-button btn rounded-circle d-flex align-items-center justify-content-center me-2">
-            <i class="bi bi-play-fill"></i>
-        </button>
-        
-        <!-- Titre au centre -->
-        <div class="flex-grow-1">
-            <h5 class="track-name mb-1">{{ audio }}</h5>
-            <p class="text-muted small mb-0">Cliquez sur le bouton play pour écouter</p>
-        </div>
-
-        <!-- Menu trois points à droite -->
-    {% if user.is_authenticated %}
-    <div class="dropdown ms-auto" onclick="event.stopPropagation()">
-        <button class="btn btn-link text-muted" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="bi bi-three-dots"></i>
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end">
-            <!-- Option Ajouter à la file d'attente -->
-           {% comment %} <li>
-                <button class="dropdown-item" onclick="addToQueue('{{ audio|escapejs }}')">
-                    <i class="bi bi-music-note-list me-2"></i>Ajouter à la file d'attente
-                </button>
-            </li> {% endcomment %}
-
-            
-            <!-- Séparateur -->
-            <li><hr class="dropdown-divider"></li>
-            
-            <!-- Sous-menu Ajouter à la playlist -->
-            <li class="dropend">
-                <a class="dropdown-item d-flex justify-content-between align-items-center" href="#" data-bs-toggle="dropdown">
-                    <span><i class="bi bi-plus-circle me-2"></i>Ajouter à la playlist</span>
-                    <i class="bi bi-chevron-right ms-2"></i>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end">
-                    {% for pl in user_playlists %}
-                    <li>
-                        <form method="post" action="{% url 'add_to_playlist' pl.id %}" onclick="event.stopPropagation()">
-                            {% csrf_token %}
-                            <input type="hidden" name="track_name" value="{{ audio }}">
-                            <button type="submit" class="dropdown-item">{{ pl.name }}</button>
-                        </form>
-                    </li>
-                    {% empty %}
-                    <li><span class="dropdown-item text-muted">Aucune playlist</span></li>
-                    {% endfor %}
-                </ul>
-            </li>
-        </ul>
-    </div>
-    {% endif %}
-    </div>
+    </form>
 </div>
+
+<!-- Modale Bootstrap pour renommer la playlist -->
+<div class="modal fade" id="editPlaylistModal" tabindex="-1" aria-labelledby="editPlaylistModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="post" action="{% url 'edit_playlist' playlist.id %}">
+      {% csrf_token %}
+      <div class="modal-content bg-dark text-white">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editPlaylistModalLabel">Renommer la playlist</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" name="name" class="form-control" value="{{ playlist.name }}" required>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-success">Enregistrer</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Liste des musiques de la playlist avec bouton play -->
+<div class="music-list" id="musicList">
+    {% for track in tracks %}
+        <div class="row music-item mb-3 p-3 rounded" data-audio-src="{% url 'play_audio' track.track_name %}" data-track-name="{{ track.track_name }}" data-searchable="{{ track.track_name }}">
+            <div class="col-auto d-flex align-items-center">
+                <button class="play-button btn rounded-circle d-flex align-items-center justify-content-center me-2">
+                    <i class="bi bi-play-fill"></i>
+                </button>
+            </div>
+            <div class="col">
+                <h5 class="track-name mb-1">{{ track.track_name }}</h5>
+            </div>
+        </div>
     {% empty %}
         <div class="no-music text-center py-5">
             <i class="bi bi-music-note-beamed display-1 text-muted"></i>
-            <p class="mt-3 text-white">Aucun morceau disponible pour le moment.</p>
-            <p class="small text-muted">Revenez plus tard pour découvrir de nouvelles musiques !</p>
+            <p class="mt-3 text-white">Aucune musique dans cette playlist.</p>
         </div>
     {% endfor %}
 </div>
-
-    
 {% endblock %}
-
 {% block page_initialization %}
     // Créer la playlist à partir des éléments musicaux
     const musicItems = document.querySelectorAll('.music-item');
@@ -95,8 +68,6 @@
             playlist.push({ src: audioSrc, name: trackName });
         }
     });
-
-    let queue = [];
     
     // Sauvegarder l'ordre original
     originalPlaylist = [...playlist];
@@ -106,7 +77,6 @@
         const playButton = item.querySelector('.play-button');
         if (playButton) {
             playButton.addEventListener('click', function(e) {
-                e.stopPropagation(); // Empêcher la propagation
                 if (!isAuthenticated) {
                     e.preventDefault();
                     window.location.href = "{% url 'login' %}";
@@ -168,11 +138,6 @@
             shuffleBtn.title = 'Lecture aléatoire activée';
         }
     }
-
-    function addToQueue(trackName) {
-        queue.push(trackName);
-        console.log('Morceau ajouté à la file d\'attente:', trackName);
-    }
     
     // Fonction pour gérer les modes de répétition
     function toggleRepeatMode() {
@@ -226,34 +191,31 @@
     }
     
     // Fonction pour passer à la piste suivante
-    // Fonction pour passer à la piste suivante
     function nextTrack() {
-        if (playlist.length === 0 && queue.length === 0) return;  // Vérifier si la playlist et la file d'attente sont vides
-
+        if (playlist.length === 0) return;
+        
         if (repeatMode === 'one') {
+            // Répéter la piste actuelle
             globalAudio.currentTime = 0;
             globalAudio.play();
             return;
         }
-
+        
         if (currentIndex < playlist.length - 1) {
             playTrack(currentIndex + 1);
-        } else if (queue.length > 0) {
-            // Si la playlist est terminée, jouer la première piste de la file d'attente
-            const nextTrackName = queue.shift();  // Retirer et obtenir le premier morceau de la file d'attente
-            playTrackByName(nextTrackName);
         } else {
-            // Fin de la playlist et de la file d'attente
+            // Fin de la playlist
             if (repeatMode === 'all') {
+                // Recommencer la playlist
                 playTrack(0);
             } else {
+                // Arrêter la lecture
                 isPlaying = false;
                 updatePlayPauseButton();
                 updateItemButtons();
             }
         }
     }
-
     
     // Fonction pour passer à la piste précédente
     function prevTrack() {

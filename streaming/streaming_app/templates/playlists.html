@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Mes playlists</h2>
+<form method="post" action="{% url 'create_playlist' %}">
+    {% csrf_token %}
+    <input type="text" name="name" placeholder="Nom de la playlist" required>
+    <button type="submit" class="btn btn-success">Créer</button>
+</form>
+<ul>
+    {% for playlist in playlists %}
+        <li>
+            {{ playlist.name }}
+            <form method="post" action="{% url 'delete_playlist' playlist.id %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+            </form>
+        </li>
+    {% empty %}
+        <li>Aucune playlist</li>
+    {% endfor %}
+</ul>
+{% endblock %}

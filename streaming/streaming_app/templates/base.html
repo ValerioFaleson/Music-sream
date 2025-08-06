@@ -10,7 +10,11 @@
     <link rel="stylesheet" href="{% static 'css/bootstrap-icons.css' %}">
     <!-- Feuille de style personnalisée -->
     <link rel="stylesheet" href="{% static 'css/styleHome.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+     
     
+
+    {% comment %} <script src="{% static 'js/bootstrap.min.js' %}"></script> {% endcomment %}
     <!-- Blocs pour les styles supplémentaires -->
     {% block extra_css %}{% endblock %}
     
@@ -89,28 +93,41 @@
                     <i class="bi bi-house-door me-2"></i>
                     <span class="nav-text">Accueil</span>
                 </a>
-                <a href="#" class="nav-link {% block nav_search %}{% endblock %}">
+                {% comment %} <a href="#" class="nav-link {% block nav_search %}{% endblock %}">
                     <i class="bi bi-search me-2"></i>
                     <span class="nav-text">Rechercher</span>
-                </a>
-                <a href="#" class="nav-link {% block nav_library %}{% endblock %}">
+                </a> {% endcomment %}
+                {% comment %} <a href="#" class="nav-link {% block nav_library %}{% endblock %}">
                     <i class="bi bi-collection me-2"></i>
                     <span class="nav-text">Ma bibliothèque</span>
-                </a>
+                </a> {% endcomment %}
             </nav>
 
             <!-- Section Playlist -->
             <div class="mt-4">
                 <h6 class="text-uppercase text-muted mb-3 section-title">Playlists</h6>
-                <a href="#" class="nav-link">
+                <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#createPlaylistModal">
                     <i class="bi bi-plus-square me-2"></i>
                     <span class="nav-text">Créer une playlist</span>
                 </a>
-
-                <a href="#" class="nav-link">
+                {% if user.is_authenticated %}
+                    <ul class="list-unstyled ps-3">
+                        {% for pl in user_playlists %}
+                            <li>
+                                <a href="{% url 'playlist_detail' pl.id %}" class="nav-link">
+                                    <i class="bi bi-folder2-open me-2"></i>
+                                    <span class="nav-text">{{ pl.name }}</span>
+                                </a>
+                            </li>
+                        {% empty %}
+                            <li class="text-muted small">Aucune playlist</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {% comment %} <a href="#" class="nav-link">
                     <i class="bi bi-heart me-2"></i>
                     <span class="nav-text">Titres likés</span>
-                </a>
+                </a> {% endcomment %}
             </div>
 
             <!-- Bloc pour navigation supplémentaire -->
@@ -184,7 +201,7 @@
             </div>
             <div class="track-info">
                 <h4 id="currentTrackName">Aucune piste sélectionnée</h4>
-                <p>Choisissez une musique</p>
+                {% comment %} <p>Choisissez une musique</p> {% endcomment %}
             </div>
         </div>
 
@@ -235,6 +252,8 @@
 
     <!-- Bootstrap JavaScript -->
     <script src="{% static 'js/bootstrap.min.js' %}"></script>
+    {% comment %} <script src="{% static 'js/popper.min.js' %}"></script> {% endcomment %}
+    
     
     <!-- Script JavaScript de base -->
     <script>
@@ -318,6 +337,16 @@
             }
         }
 
+        function addToQueue(trackName) {
+            playlist.push(trackName);
+            console.log('Morceau ajouté à la file d\'attente:', trackName);
+            if (!currentTrack) {
+                currentTrack = trackName;
+                document.getElementById('currentTrackName').textContent = trackName;
+            }
+        }
+
+
         {% block extra_js %}
         // JavaScript supplémentaire peut être ajouté ici dans les templates enfants
         {% endblock %}
@@ -325,5 +354,26 @@
     
     <!-- Scripts supplémentaires -->
     {% block extra_scripts %}{% endblock %}
+    <!-- Modale Bootstrap pour créer une playlist -->
+    <div class="modal fade" id="createPlaylistModal" tabindex="-1" aria-labelledby="createPlaylistModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="post" action="{% url 'create_playlist' %}">
+        {% csrf_token %}
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header">
+            <h5 class="modal-title" id="createPlaylistModalLabel">Créer une nouvelle playlist</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+            <input type="text" name="name" class="form-control" placeholder="Nom de la playlist" required>
+            </div>
+            <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            <button type="submit" class="btn btn-success">Créer</button>
+            </div>
+        </div>
+        </form>
+    </div>
+    </div>
 </body>
 </html>
